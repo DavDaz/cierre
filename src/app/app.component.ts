@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { FileProcessorComponent } from './components/file-processor/file-processor.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [FileProcessorComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

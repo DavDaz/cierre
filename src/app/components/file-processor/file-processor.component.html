@@ -1,0 +1,40 @@
+<div class="flex h-screen items-center justify-center bg-gray-100">
+  <div class="bg-white shadow-lg rounded-lg p-8 w-96">
+    <h1 class="text-2xl font-bold text-center text-gray-700 mb-6">
+      Procesador de Archivos
+    </h1>
+    <div class="mb-4">
+      <label for="estado" class="block text-sm font-medium text-gray-600 mb-2">
+        Selecciona el estado:
+      </label>
+      <select
+        id="estado"
+        [(ngModel)]="estadoGlobal"
+        class="block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring focus:ring-blue-200"
+      >
+        <option value="PAGADO">PAGADO</option>
+        <option value="NO PAGADO">NO PAGADO</option>
+      </select>
+    </div>
+    <div class="mb-6">
+      <label for="file" class="block text-sm font-medium text-gray-600 mb-2">
+        Cargar archivo:
+      </label>
+      <input
+        type="file"
+        id="file"
+        (change)="onFileUpload($event)"
+        class="block w-full text-sm text-gray-600
+        file:mr-4 file:py-2 file:px-4
+        file:rounded-lg file:border-0
+        file:text-sm file:font-semibold
+        file:bg-blue-100 file:text-blue-700
+        hover:file:bg-blue-200
+        cursor-pointer"
+      />
+    </div>
+    <p class="text-sm text-gray-500 text-center">
+      Selecciona un estado y sube un archivo para procesarlo.
+    </p>
+  </div>
+</div>

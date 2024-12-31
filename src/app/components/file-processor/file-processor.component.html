@@ -10,31 +10,50 @@
       <select
         id="estado"
         [(ngModel)]="estadoGlobal"
+        (change)="onStateChange()"
         class="block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring focus:ring-blue-200"
       >
+        <option value="" disabled selected>Selecciona un estado</option>
         <option value="PAGADO">PAGADO</option>
         <option value="NO PAGADO">NO PAGADO</option>
       </select>
     </div>
-    <div class="mb-6">
+    <div class="mb-4">
       <label for="file" class="block text-sm font-medium text-gray-600 mb-2">
-        Cargar archivo:
+        Cargar archivo (solo .txt):
       </label>
       <input
         type="file"
         id="file"
+        accept=".txt"
         (change)="onFileUpload($event)"
+        [disabled]="!fileSelected"
         class="block w-full text-sm text-gray-600
         file:mr-4 file:py-2 file:px-4
         file:rounded-lg file:border-0
         file:text-sm file:font-semibold
         file:bg-blue-100 file:text-blue-700
         hover:file:bg-blue-200
-        cursor-pointer"
+        cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       />
     </div>
-    <p class="text-sm text-gray-500 text-center">
-      Selecciona un estado y sube un archivo para procesarlo.
+    <div class="flex space-x-4 justify-center">
+      <button
+        (click)="downloadFiles()"
+        [disabled]="!fileProcessed"
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+      >
+        Descargar
+      </button>
+      <button
+        (click)="verifyCSV()"
+        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+      >
+        Verificar
+      </button>
+    </div>
+    <p class="text-sm text-gray-500 text-center mt-4">
+      Selecciona un estado y luego sube un archivo para procesarlo.
     </p>
   </div>
 </div>

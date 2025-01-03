@@ -40,30 +40,45 @@ export class FileProcessorComponent {
   }
 
   processFile(content: string) {
-    const lines = content.split('\n').map((line) => line.trim());
+    const lines = content.split('\n');
     const cleanedLines = this.cleanLines(lines);
     const processedLines = cleanedLines.map(this.processLine);
   
-    // Verificar que no haya encabezados duplicados o incorrectos
-    const finalLines = processedLines.filter((line, index) => index === 0 || !line[0].startsWith('#'));
+    // Eliminar encabezado duplicado si aparece después del principal
+    const finalLines = processedLines.filter((line, index) => {
+      // Mantener el primer encabezado
+      if (index === 0 && line[0].startsWith('#CUENTA')) {
+        return true;
+      }
+      // Eliminar encabezado redundante
+      return !line[0].startsWith('#DE CUENTA');
+    });
   
     this.csvContent = this.generateCSV(finalLines, this.estadoGlobal);
     this.txtContent = this.generateFormattedText(finalLines, this.estadoGlobal);
   
-    this.fileProcessed = true;
+    this.fileProcessed = true; // Marcar como procesado
   }
   
   
-
+  
   cleanLines(lines: string[]): string[] {
-    return lines.filter(
-      (line, index) =>
-        line && // Eliminar líneas vacías
-        (index === 0 || !line.startsWith('#DE CUENTA')) && // Permitir solo el encabezado principal en la primera posición
-        !line.startsWith('B/.') // Eliminar líneas con contenido no deseado
-    );
-  }
+    return lines
+      .map((line) => line.trim()) // Eliminar espacios alrededor
+      .filter((line, index) => {
+        // Mantener el primer encabezado válido
+        if (index === 0 && line.toLowerCase().startsWith('#cuenta')) {
+          return true;
+        }
   
+        // Eliminar encabezados malformados y totales no deseados
+        return (
+          !line.toLowerCase().startsWith('# de cuenta') && // Filtrar encabezados malformados
+          !line.toLowerCase().startsWith('b/.') && // Filtrar totales no deseados
+          line.length > 0 // Eliminar líneas vacías
+        );
+      });
+  }
   
 
   processLine(line: string): string[] {

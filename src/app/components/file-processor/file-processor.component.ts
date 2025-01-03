@@ -16,6 +16,7 @@ export class FileProcessorComponent {
   txtContent: string = ''; // Contenido del TXT generado
   fileProcessed = false; // Bandera para habilitar el botón de descarga
   fileSelected = false; // Bandera para habilitar la carga de archivo
+  verificationLog: string = ''; // Variable para almacenar las verificaciones acumuladas
 
   onStateChange() {
     this.fileSelected = this.estadoGlobal !== ''; // Habilitar carga de archivo si se selecciona un estado
@@ -42,19 +43,28 @@ export class FileProcessorComponent {
     const lines = content.split('\n').map((line) => line.trim());
     const cleanedLines = this.cleanLines(lines);
     const processedLines = cleanedLines.map(this.processLine);
-
-    // Generar contenidos del CSV y TXT
-    this.csvContent = this.generateCSV(processedLines, this.estadoGlobal);
-    this.txtContent = this.generateFormattedText(processedLines, this.estadoGlobal);
-
-    this.fileProcessed = true; // Habilitar el botón de descarga
+  
+    // Verificar que no haya encabezados duplicados o incorrectos
+    const finalLines = processedLines.filter((line, index) => index === 0 || !line[0].startsWith('#'));
+  
+    this.csvContent = this.generateCSV(finalLines, this.estadoGlobal);
+    this.txtContent = this.generateFormattedText(finalLines, this.estadoGlobal);
+  
+    this.fileProcessed = true;
   }
+  
+  
 
   cleanLines(lines: string[]): string[] {
     return lines.filter(
-      (line) => line && !line.startsWith('# DE CUENTA') && !line.startsWith('B/.')
+      (line, index) =>
+        line && // Eliminar líneas vacías
+        (index === 0 || !line.startsWith('#DE CUENTA')) && // Permitir solo el encabezado principal en la primera posición
+        !line.startsWith('B/.') // Eliminar líneas con contenido no deseado
     );
   }
+  
+  
 
   processLine(line: string): string[] {
     return line.split(/\s{4,}/).map((part) => part.trim());
@@ -63,8 +73,12 @@ export class FileProcessorComponent {
   generateCSV(lines: string[][], estado: string): string {
     const header = '#CUENTA,NOMBRE,IDENTIFICACION,MONTO,PROGRAMA,ESTADO';
     const rows = lines.map((line) => line.join(',') + ',' + estado);
+  
+    // Asegúrate de que solo exista un encabezado correcto
     return [header, ...rows].join('\n');
   }
+  
+  
 
   generateFormattedText(lines: string[][], estado: string): string {
     const header = this.formatRow([
@@ -75,12 +89,16 @@ export class FileProcessorComponent {
       'PROGRAMA',
       'ESTADO',
     ]);
+  
     const formattedRows = lines.map((line) => {
       const fullLine = [...line, estado];
       return this.formatRow(fullLine);
     });
+  
     return [header, ...formattedRows].join('\n');
   }
+  
+  
 
   formatRow(columns: string[]): string {
     let formattedRow = '';
@@ -103,8 +121,10 @@ export class FileProcessorComponent {
     const year = now.getFullYear();
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
-    return `${day}-${month}-${year}-${hours}-${minutes}`;
+    const seconds = String(now.getSeconds()).padStart(2, '0'); // Agregar los segundos
+    return `${day}-${month}-${year}-${hours}-${minutes}-${seconds}`;
   }
+  
 
   downloadFiles() {
     if (!this.fileProcessed) return;
@@ -135,7 +155,38 @@ export class FileProcessorComponent {
       return;
     }
 
-    alert('Verificación aún no implementada. Próximamente.');
+    const lines = this.csvContent.split('\n').map(line => line.trim());
+    const dataLines = lines.slice(1); // Omitir el encabezado
+
+    let totalMonto = 0;
+    let cantidadRegistros = 0;
+
+    dataLines.forEach(line => {
+      if (line) {
+        const columns = line.split(',');
+        const monto = parseFloat(columns[3]); // Índice de la columna MONTO
+        if (!isNaN(monto)) {
+          totalMonto += monto;
+        }
+        cantidadRegistros++;
+      }
+    });
+
+    // Generar contenido de la verificación actual
+    const timestamp = this.getFormattedTimestamp();
+    const currentVerification = 
+      `Verificación realizada el ${timestamp}:\n` +
+      `Cantidad de registros: ${cantidadRegistros}\n` +
+      `Total MONTO: B/.${totalMonto.toFixed(2)}\n\n`;
+
+    // Acumular la verificación actual en el log
+    this.verificationLog += currentVerification;
+
+    // Descargar archivo acumulado
+    const txtFilename = `verificacion-acumulada.txt`;
+    this.downloadFile(txtFilename, this.verificationLog, 'text/plain');
+
+    alert('Verificación completada y archivo TXT actualizado.');
   }
 
   downloadFile(filename: string, content: string, mimeType: string) {
